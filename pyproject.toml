@@ -1,0 +1,25 @@
+[project]
+name = "postech-ml-challenge-fase-1"
+version = "0.1.0"
+description = "Tech Challenge - Machine Learning com Python 3.13"
+requires-python = ">=3.13"
+dependencies = [
+    "pandas",
+    "numpy",
+    "matplotlib",
+    "seaborn",
+    "scikit-learn",
+    "torch",
+    "mlflow",
+    "ipykernel",
+    "ruff",
+    "pytest",
+]
+
+[tool.ruff]
+line-length = 88
+lint.select = ["E", "F", "I", "N", "B"] # Erros, Flake8, Isort, Naming, Bugbear
+lint.ignore = []
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
