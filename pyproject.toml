@@ -12,6 +12,7 @@ dependencies = [
     "torch",
     "mlflow",
     "ipykernel",
+    "openpyxl",
     "ruff",
     "pytest",
 ]
