@@ -18,10 +18,10 @@ from sklearn.metrics import (
     recall_score,
     roc_auc_score,
 )
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, StratifiedKFold, cross_validate
 from sklearn.pipeline import Pipeline
 
-from src.config import (
+from config import (
     DATA_DIR,
     LEAKAGE_COLUMNS,
     MLFLOW_EXPERIMENT_NAME,
@@ -30,9 +30,9 @@ from src.config import (
     TARGET_COLUMN,
     TEST_SIZE,
 )
-from src.data import load_telco_dataset, split_features_target
-from src.dataset_version import build_dataset_manifest, write_dataset_manifest
-from src.features import build_preprocessor
+from data import load_telco_dataset, split_features_target
+from dataset_version import build_dataset_manifest, write_dataset_manifest
+from features import build_preprocessor
 
 
 def build_model(model_name: str, random_seed: int) -> object:
@@ -74,6 +74,70 @@ def evaluate_model(
         metrics["roc_auc"] = roc_auc_score(y_test, positive_scores)
 
     return metrics
+
+
+def evaluate_model_cv(
+        pipeline: Pipeline,
+        x: pd.DataFrame,
+        y: pd.Series,
+        random_seed: int = 42,
+        n_splits: int = 5
+) -> dict[str, float]:
+    """
+    Avalia um pipeline de machine learning fornecido usando validação cruzada e calcula
+    diversas métricas de desempenho de classificação, incluindo acurácia, precisão, recall,
+    F1-score, ROC AUC e Precision-Recall AUC.
+
+    A função utiliza validação cruzada k-fold estratificada para garantir que a distribuição
+    das classes seja preservada em todas as dobras (folds). Os resultados são agregados sobre
+    todas as dobras e retornados como um dicionário contendo os valores médios para cada métrica.
+
+    :param pipeline: Um objeto de pipeline do scikit-learn que encapsula as etapas de
+        pré-processamento e o modelo de machine learning a ser avaliado.
+    :type pipeline: Pipeline
+    :param x: Conjunto de atributos como um DataFrame do pandas.
+    :type x: pd.DataFrame
+    :param y: Vetor de rótulos como uma Series do pandas.
+    :type y: pd.Series
+    :param random_seed: Controla a aleatorização da estratégia de validação cruzada.
+        O padrão é 42.
+    :type random_seed: int
+    :param n_splits: Número de divisões (ou dobras) para a estratégia de validação cruzada.
+        O padrão é 5.
+    :return: Um dicionário contendo as pontuações médias da validação cruzada para métricas
+        incluindo acurácia (chave: "cv_accuracy"), precisão (chave: "cv_precision"),
+        recall (chave: "cv_recall"), F1-score (chave: "cv_f1"), ROC AUC (chave: "cv_roc_auc")
+        e Precision-Recall AUC (chave: "cv_pr_auc").
+    :rtype: dict[str, float]
+    """
+    cv_strategy = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=random_seed)
+
+    scoring_metrics = {
+        'accuracy': 'accuracy',
+        'precision': 'precision',
+        'recall': 'recall',
+        'f1': 'f1',
+        'roc_auc': 'roc_auc',
+        'pr_auc': 'average_precision'
+    }
+
+    cv_results = cross_validate(
+        pipeline,
+        x,
+        y,
+        cv=cv_strategy,
+        scoring=scoring_metrics,
+        return_train_score=False
+    )
+
+    return {
+        "cv_accuracy": cv_results['test_accuracy'].mean(),
+        "cv_precision": cv_results['test_precision'].mean(),
+        "cv_recall": cv_results['test_recall'].mean(),
+        "cv_f1": cv_results['test_f1'].mean(),
+        "cv_roc_auc": cv_results['test_roc_auc'].mean(),
+        "cv_pr_auc": cv_results['test_pr_auc'].mean(),
+    }
 
 
 def save_confusion_matrix(
@@ -180,6 +244,14 @@ def run_training(
         metrics = evaluate_model(pipeline, x_test, y_test)
         mlflow.log_metrics(metrics)
 
+        cv_metrics = evaluate_model_cv(
+            pipeline=build_pipeline(model_name, x, random_seed),  # passa um pipeline "limpo"
+            x=x,
+            y=y,
+            random_seed=random_seed
+        )
+        mlflow.log_metrics(cv_metrics)
+
         with tempfile.TemporaryDirectory() as temp_dir:
             artifact_dir = Path(temp_dir)
             manifest_path = write_dataset_manifest(
@@ -206,7 +278,7 @@ def run_training(
                 input_example=x_train.head(5),
             )
 
-    return metrics
+    return {**metrics, **cv_metrics}
 
 
 def parse_args() -> argparse.Namespace:
