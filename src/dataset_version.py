@@ -4,8 +4,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from src.config import DATA_DIR, DATASET_NAME
-from src.data import get_source_file_paths
+from config import DATA_DIR, DATASET_NAME
+from data import get_source_file_paths
 
 CHUNK_SIZE = 1024 * 1024
 
