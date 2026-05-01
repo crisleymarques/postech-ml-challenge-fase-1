@@ -21,7 +21,7 @@ from sklearn.metrics import (
 from sklearn.model_selection import train_test_split, StratifiedKFold, cross_validate
 from sklearn.pipeline import Pipeline
 
-from config import (
+from src.config import (
     DATA_DIR,
     LEAKAGE_COLUMNS,
     MLFLOW_EXPERIMENT_NAME,
@@ -30,9 +30,9 @@ from config import (
     TARGET_COLUMN,
     TEST_SIZE,
 )
-from data import load_telco_dataset, split_features_target
-from dataset_version import build_dataset_manifest, write_dataset_manifest
-from features import build_preprocessor
+from src.data import load_telco_dataset, split_features_target
+from src.dataset_version import build_dataset_manifest, write_dataset_manifest
+from src.features import build_preprocessor
 
 
 def build_model(model_name: str, random_seed: int) -> object:

@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from config import (
+from src.config import (
     DATA_DIR,
     ID_COLUMNS,
     LEAKAGE_COLUMNS,
