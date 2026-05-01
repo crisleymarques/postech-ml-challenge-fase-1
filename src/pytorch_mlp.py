@@ -18,6 +18,20 @@ from src.features import build_preprocessor
 
 # 1 & 2. Definir Arquitetura da MLP e Função de Ativação
 class TelcoMLP(nn.Module):
+    """
+        Um modelo de Perceptron Multicamadas (MLP) adaptado para tarefas de classificação.
+
+        Esta classe implementa uma arquitetura simples de rede neural projetada para problemas de
+        classificação binária. Consiste em múltiplas camadas totalmente conectadas (fully connected),
+        funções de ativação ReLU e camadas de dropout para evitar o overfitting. A camada de saída
+        é reduzida a uma única unidade para classificação binária, com os logits retornados para
+        processamento posterior por uma função de ativação sigmoid, tipicamente incluída na função
+        de perda (ex: BCEWithLogitsLoss).
+
+        :ivar network: Um container sequencial de camadas incluindo camadas Linear, ReLU e Dropout,
+            culminando em uma camada Linear final para classificação binária.
+        :type network: torch.nn.Sequential
+    """
     def __init__(self, input_dim: int, hidden_dim: int, dropout_rate: float = 0.2):
         super().__init__()
         self.network = nn.Sequential(
