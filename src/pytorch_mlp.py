@@ -1,6 +1,5 @@
-# src/pytorch_mlp.py
-
 import argparse
+from typing import Tuple
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -16,37 +15,85 @@ from src.data import load_telco_dataset, split_features_target
 from src.features import build_preprocessor
 
 
-# 1 & 2. Definir Arquitetura da MLP e Função de Ativação
 class TelcoMLP(nn.Module):
-    """
-        Um modelo de Perceptron Multicamadas (MLP) adaptado para tarefas de classificação.
-
-        Esta classe implementa uma arquitetura simples de rede neural projetada para problemas de
-        classificação binária. Consiste em múltiplas camadas totalmente conectadas (fully connected),
-        funções de ativação ReLU e camadas de dropout para evitar o overfitting. A camada de saída
-        é reduzida a uma única unidade para classificação binária, com os logits retornados para
-        processamento posterior por uma função de ativação sigmoid, tipicamente incluída na função
-        de perda (ex: BCEWithLogitsLoss).
-
-        :ivar network: Um container sequencial de camadas incluindo camadas Linear, ReLU e Dropout,
-            culminando em uma camada Linear final para classificação binária.
-        :type network: torch.nn.Sequential
-    """
     def __init__(self, input_dim: int, hidden_dim: int, dropout_rate: float = 0.2):
         super().__init__()
         self.network = nn.Sequential(
             nn.Linear(input_dim, hidden_dim),
-            nn.ReLU(),  # Função de ativação
+            nn.ReLU(),
             nn.Dropout(dropout_rate),
             nn.Linear(hidden_dim, hidden_dim // 2),
             nn.ReLU(),
             nn.Dropout(dropout_rate),
-            nn.Linear(hidden_dim // 2, 1)  # Saída única para classificação binária
+            nn.Linear(hidden_dim // 2, 1)
         )
 
     def forward(self, x):
-        # A saída bruta (logits). A ativação Sigmoid será aplicada pela Loss Function (BCEWithLogitsLoss)
         return self.network(x)
+
+
+def prepare_data(batch_size: int) -> Tuple[DataLoader, torch.Tensor, pd.Series, int]:
+    """Carrega os dados, aplica o pipeline do sklearn e converte para tensores."""
+    torch.manual_seed(RANDOM_SEED)
+    df = load_telco_dataset(DATA_DIR)
+    x, y = split_features_target(df)
+
+    x_train, x_test, y_train, y_test = train_test_split(
+        x, y, test_size=TEST_SIZE, stratify=y, random_state=RANDOM_SEED
+    )
+
+    preprocessor = build_preprocessor(x_train)
+    x_train_processed = preprocessor.fit_transform(x_train)
+    x_test_processed = preprocessor.transform(x_test)
+
+    # Convertendo para Tensores
+    X_train_tensor = torch.tensor(x_train_processed, dtype=torch.float32)
+    y_train_tensor = torch.tensor(y_train.values, dtype=torch.float32).view(-1, 1)
+    X_test_tensor = torch.tensor(x_test_processed, dtype=torch.float32)
+
+    # Criando o DataLoader para o treino
+    train_dataset = TensorDataset(X_train_tensor, y_train_tensor)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+
+    input_dim = X_train_tensor.shape[1]
+
+    return train_loader, X_test_tensor, y_test, input_dim
+
+
+def train_model(model: nn.Module, train_loader: DataLoader, criterion: nn.Module, optimizer: optim.Optimizer,
+                epochs: int) -> None:
+    """Executa o loop de treinamento do PyTorch."""
+    model.train()
+    for epoch in range(epochs):
+        epoch_loss = 0.0
+        for batch_X, batch_y in train_loader:
+            optimizer.zero_grad()
+            outputs = model(batch_X)
+            loss = criterion(outputs, batch_y)
+            loss.backward()
+            optimizer.step()
+            epoch_loss += loss.item()
+
+        if (epoch + 1) % 10 == 0:
+            print(f"Epoch {epoch + 1}/{epochs} | Loss: {epoch_loss / len(train_loader):.4f}")
+
+
+def evaluate_model(model: nn.Module, X_test_tensor: torch.Tensor, y_test: pd.Series) -> dict[str, float]:
+    """Avalia o modelo treinado com os dados de teste e retorna as métricas."""
+    model.eval()
+    with torch.no_grad():
+        test_outputs = model(X_test_tensor)
+        probabilities = torch.sigmoid(test_outputs).numpy()
+        predictions = (probabilities >= 0.5).astype(int)
+
+    metrics = {
+        "accuracy": accuracy_score(y_test, predictions),
+        "precision": precision_score(y_test, predictions, zero_division=0),
+        "recall": recall_score(y_test, predictions, zero_division=0),
+        "f1": f1_score(y_test, predictions, zero_division=0),
+        "roc_auc": roc_auc_score(y_test, probabilities)
+    }
+    return metrics
 
 
 def run_training(
@@ -56,45 +103,20 @@ def run_training(
         batch_size: int,
         dropout_rate: float
 ) -> dict[str, float]:
-    # Setup MLflow
+    """Função orquestradora: gerencia MLflow, pipeline de dados, treino e avaliação."""
+
     mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
     mlflow.set_experiment(MLFLOW_EXPERIMENT_NAME)
 
-    # Preparação de Dados e Fixação de Seed
-    torch.manual_seed(RANDOM_SEED)
-    df = load_telco_dataset(DATA_DIR)
-    x, y = split_features_target(df)
+    # 1. Prepara os dados
+    train_loader, X_test_tensor, y_test, input_dim = prepare_data(batch_size)
 
-    x_train, x_test, y_train, y_test = train_test_split(
-        x, y, test_size=TEST_SIZE, stratify=y, random_state=RANDOM_SEED
-    )
-
-    # Garantir compatibilidade com o pipeline de features
-    preprocessor = build_preprocessor(x_train)
-    x_train_processed = preprocessor.fit_transform(x_train)
-    x_test_processed = preprocessor.transform(x_test)
-
-    # Convertendo Pandas/Numpy para Tensores do PyTorch
-    X_train_tensor = torch.tensor(x_train_processed, dtype=torch.float32)
-    y_train_tensor = torch.tensor(y_train.values, dtype=torch.float32).view(-1, 1)
-    X_test_tensor = torch.tensor(x_test_processed, dtype=torch.float32)
-    y_test_tensor = torch.tensor(y_test.values, dtype=torch.float32).view(-1, 1)
-
-    train_dataset = TensorDataset(X_train_tensor, y_train_tensor)
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-
-    # Inicialização do Modelo
-    input_dim = X_train_tensor.shape[1]
+    # 2. Inicializa o modelo, loss e otimizador
     model = TelcoMLP(input_dim, hidden_dim, dropout_rate)
-
-    # 3. Definir Loss Function (BCEWithLogitsLoss é mais estável numericamente que BCELoss)
     criterion = nn.BCEWithLogitsLoss()
-
-    # 4. Definir Optimizer
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
     with mlflow.start_run(run_name="pytorch-mlp"):
-        # Log dos hiperparâmetros no MLflow (Checklist: Tornar configurável)
         mlflow.log_params({
             "hidden_dim": hidden_dim,
             "learning_rate": learning_rate,
@@ -104,40 +126,20 @@ def run_training(
             "random_seed": RANDOM_SEED
         })
 
-        # Loop de Treinamento
-        model.train()
-        for epoch in range(epochs):
-            epoch_loss = 0.0
-            for batch_X, batch_y in train_loader:
-                optimizer.zero_grad()
-                outputs = model(batch_X)
-                loss = criterion(outputs, batch_y)
-                loss.backward()
-                optimizer.step()
-                epoch_loss += loss.item()
+        # 3. Treina o modelo
+        train_model(model, train_loader, criterion, optimizer, epochs)
 
-            if (epoch + 1) % 10 == 0:
-                print(f"Epoch {epoch + 1}/{epochs} | Loss: {epoch_loss / len(train_loader):.4f}")
-
-        # Avaliação
-        model.eval()
-        with torch.no_grad():
-            test_outputs = model(X_test_tensor)
-            probabilities = torch.sigmoid(test_outputs).numpy()
-            predictions = (probabilities >= 0.5).astype(int)
-
-        metrics = {
-            "accuracy": accuracy_score(y_test, predictions),
-            "precision": precision_score(y_test, predictions, zero_division=0),
-            "recall": recall_score(y_test, predictions, zero_division=0),
-            "f1": f1_score(y_test, predictions, zero_division=0),
-            "roc_auc": roc_auc_score(y_test, probabilities)
-        }
-
+        # 4. Avalia e salva
+        metrics = evaluate_model(model, X_test_tensor, y_test)
         mlflow.log_metrics(metrics)
+        input_example = X_test_tensor[:5].numpy()
 
-        # Salvando o modelo treinado no formato PyTorch no MLflow
-        mlflow.pytorch.log_model(model, "model")
+        mlflow.pytorch.log_model(
+            model,
+            "model",
+            serialization_format="pt2",
+            input_example=input_example
+        )
 
     return metrics
 
@@ -155,6 +157,7 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     print("Iniciando treinamento da MLP...")
+
     metrics = run_training(
         hidden_dim=args.hidden_dim,
         learning_rate=args.lr,
@@ -162,6 +165,7 @@ def main() -> None:
         batch_size=args.batch_size,
         dropout_rate=args.dropout
     )
+
     print("\nResultados Finais no Conjunto de Teste:")
     for m, v in metrics.items():
         print(f"{m}: {v:.4f}")
