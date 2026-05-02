@@ -20,6 +20,9 @@ quality: lint test
 train-baselines:
 	$(PYTHON) -m src.train_baselines
 
+train-mlp:
+	$(PYTHON) -m src.pytorch_mlp --epochs 50 --batch-size 32
+
 mlflow-ui:
 	$(PYTHON) -m mlflow ui --backend-store-uri file:./mlruns
 
