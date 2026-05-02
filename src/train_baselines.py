@@ -7,73 +7,29 @@ from pathlib import Path
 import mlflow
 import mlflow.sklearn
 import pandas as pd
-from sklearn.dummy import DummyClassifier
-from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
     ConfusionMatrixDisplay,
-    accuracy_score,
     confusion_matrix,
-    f1_score,
-    precision_score,
-    recall_score,
-    roc_auc_score,
 )
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 
 from src.config import (
-    DATA_DIR,
     LEAKAGE_COLUMNS,
     MLFLOW_EXPERIMENT_NAME,
     MLFLOW_TRACKING_URI,
     RANDOM_SEED,
+    RAW_DATA_DIR,
     TARGET_COLUMN,
     TEST_SIZE,
 )
 from src.data import load_telco_dataset, split_features_target
 from src.dataset_version import build_dataset_manifest, write_dataset_manifest
-from src.features import build_preprocessor
+from src.evaluation.metrics import evaluate_sklearn_classifier as evaluate_model
+from src.models.baselines import build_model, build_pipeline
+from src.tracking.mlflow import log_dataset_version
 
-
-def build_model(model_name: str, random_seed: int) -> object:
-    if model_name == "dummy_classifier":
-        return DummyClassifier(strategy="most_frequent", random_state=random_seed)
-    if model_name == "logistic_regression":
-        return LogisticRegression(
-            class_weight="balanced",
-            max_iter=1000,
-            random_state=random_seed,
-        )
-    raise ValueError(f"Unsupported model: {model_name}")
-
-
-def build_pipeline(model_name: str, x: pd.DataFrame, random_seed: int) -> Pipeline:
-    return Pipeline(
-        steps=[
-            ("preprocess", build_preprocessor(x)),
-            ("model", build_model(model_name, random_seed)),
-        ]
-    )
-
-
-def evaluate_model(
-    pipeline: Pipeline,
-    x_test: pd.DataFrame,
-    y_test: pd.Series,
-) -> dict[str, float]:
-    predictions = pipeline.predict(x_test)
-    metrics = {
-        "accuracy": accuracy_score(y_test, predictions),
-        "precision": precision_score(y_test, predictions, zero_division=0),
-        "recall": recall_score(y_test, predictions, zero_division=0),
-        "f1": f1_score(y_test, predictions, zero_division=0),
-    }
-
-    if hasattr(pipeline, "predict_proba"):
-        positive_scores = pipeline.predict_proba(x_test)[:, 1]
-        metrics["roc_auc"] = roc_auc_score(y_test, positive_scores)
-
-    return metrics
+__all__ = ["build_model", "build_pipeline", "evaluate_model", "run_training"]
 
 
 def save_confusion_matrix(
@@ -119,22 +75,9 @@ def save_feature_names(pipeline: Pipeline, output_path: Path) -> Path:
     return output_path
 
 
-def log_dataset_version(manifest: dict, manifest_path: Path) -> None:
-    source_files = ",".join(item["name"] for item in manifest["files"])
-    mlflow.set_tags(
-        {
-            "dataset.name": manifest["dataset_name"],
-            "dataset.version": manifest["dataset_version"],
-            "dataset.hash": manifest["dataset_version"],
-            "dataset.source_files": source_files,
-        }
-    )
-    mlflow.log_artifact(str(manifest_path), artifact_path="dataset")
-
-
 def run_training(
     model_name: str,
-    data_dir: Path = DATA_DIR,
+    data_dir: Path = RAW_DATA_DIR,
     test_size: float = TEST_SIZE,
     random_seed: int = RANDOM_SEED,
 ) -> dict[str, float]:

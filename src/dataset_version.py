@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from src.config import DATA_DIR, DATASET_NAME
+from src.config import DATASET_NAME, RAW_DATA_DIR
 from src.data import get_source_file_paths
 
 CHUNK_SIZE = 1024 * 1024
@@ -19,7 +19,7 @@ def file_sha256(path: Path) -> str:
 
 
 def build_dataset_manifest(
-    data_dir: Path = DATA_DIR,
+    data_dir: Path = RAW_DATA_DIR,
     dataset_name: str = DATASET_NAME,
 ) -> dict[str, Any]:
     files = []

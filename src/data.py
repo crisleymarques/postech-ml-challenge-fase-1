@@ -3,9 +3,9 @@ from pathlib import Path
 import pandas as pd
 
 from src.config import (
-    DATA_DIR,
     ID_COLUMNS,
     LEAKAGE_COLUMNS,
+    RAW_DATA_DIR,
     RAW_DATA_FILES,
     TARGET_COLUMN,
 )
@@ -20,7 +20,7 @@ def clean_column_names(df: pd.DataFrame) -> pd.DataFrame:
     return df.rename(columns=renamed)
 
 
-def load_raw_tables(data_dir: Path = DATA_DIR) -> dict[str, pd.DataFrame]:
+def load_raw_tables(data_dir: Path = RAW_DATA_DIR) -> dict[str, pd.DataFrame]:
     tables = {}
     for table_name, file_name in RAW_DATA_FILES.items():
         path = data_dir / file_name
@@ -30,7 +30,7 @@ def load_raw_tables(data_dir: Path = DATA_DIR) -> dict[str, pd.DataFrame]:
     return tables
 
 
-def load_telco_dataset(data_dir: Path = DATA_DIR) -> pd.DataFrame:
+def load_telco_dataset(data_dir: Path = RAW_DATA_DIR) -> pd.DataFrame:
     tables = load_raw_tables(data_dir)
 
     df = (
@@ -59,5 +59,5 @@ def split_features_target(
     return x, y
 
 
-def get_source_file_paths(data_dir: Path = DATA_DIR) -> list[Path]:
+def get_source_file_paths(data_dir: Path = RAW_DATA_DIR) -> list[Path]:
     return [data_dir / file_name for file_name in RAW_DATA_FILES.values()]
