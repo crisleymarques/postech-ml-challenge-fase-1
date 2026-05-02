@@ -1,4 +1,4 @@
-.PHONY: install lint format test quality train-baselines mlflow-ui clean
+.PHONY: install lint format test quality train-baselines train-mlp mlflow-ui clean
 
 PYTHON ?= python3
 
@@ -21,7 +21,7 @@ train-baselines:
 	$(PYTHON) -m src.train_baselines
 
 train-mlp:
-	$(PYTHON) -m src.pytorch_mlp --epochs 50 --batch-size 32
+	$(PYTHON) -m src.train_mlp --epochs 100 --patience 10 --batch-size 32
 
 mlflow-ui:
 	$(PYTHON) -m mlflow ui --backend-store-uri file:./mlruns
