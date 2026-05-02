@@ -28,6 +28,8 @@ build/
 # MLflow / generated artifacts
 mlruns/
 outputs/
-data/processed/
+data/processed/*
+!data/processed/.gitkeep
+!data/processed/Telco_customer_churn_encoded.csv
 *.pkl
 *.joblib
