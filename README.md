@@ -73,11 +73,3 @@ Para manter o repositório organizado, utilizamos o **Ruff** como linter e forma
 - `tests/`: Testes unitários e de integração.
 - `docs/`: Documentação extra e ML Canvas.
 ```
-
----
-
-### Como usar esse texto?
-1. Você pode colocar esse conteúdo diretamente no seu arquivo `README.md` principal ou criar um novo arquivo chamado `SETUP.md` na raiz do projeto.
-2. Adicione-o ao seu Pull Request atual (`feature/setup-inicial`).
-
-**Dica para o grupo:** Após o primeiro `make install`, se alguém adicionar uma biblioteca nova no `pyproject.toml`, todos devem rodar `make install` novamente para sincronizar.

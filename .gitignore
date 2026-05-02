@@ -24,3 +24,10 @@ build/
 
 # Jupyter Notebook
 .ipynb_checkpoints/
+
+# MLflow / generated artifacts
+mlruns/
+outputs/
+data/processed/
+*.pkl
+*.joblib

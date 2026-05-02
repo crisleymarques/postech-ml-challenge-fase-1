@@ -1,17 +1,27 @@
-.PHONY: install lint format test clean
+.PHONY: install lint format test quality train-baselines mlflow-ui clean
+
+PYTHON ?= python3
 
 install:
-	python -m pip install --upgrade pip
-	python -m pip install -e .
+	$(PYTHON) -m pip install --upgrade pip
+	$(PYTHON) -m pip install -e .
 
 lint:
-	ruff check .
+	$(PYTHON) -m ruff check src tests
 
 format:
-	ruff format .
+	$(PYTHON) -m ruff format src tests
 
 test:
-	pytest tests/
+	$(PYTHON) -m pytest tests/
+
+quality: lint test
+
+train-baselines:
+	$(PYTHON) -m src.train_baselines
+
+mlflow-ui:
+	$(PYTHON) -m mlflow ui --backend-store-uri file:./mlruns
 
 clean:
 	rm -rf `find . -type d -name __pycache__`
