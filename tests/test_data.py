@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 
 from src.config import RAW_DATA_FILES, TARGET_COLUMN
-from src.data import load_telco_dataset, split_features_target
+from src.data import load_model_ready_dataset, load_telco_dataset, split_features_target
 
 
 def test_loader_merges_tables_and_removes_leakage_from_features(tmp_path: Path) -> None:
@@ -56,3 +56,21 @@ def test_loader_merges_tables_and_removes_leakage_from_features(tmp_path: Path) 
     assert "ChurnScore" not in features.columns
     assert "CustomerStatus" not in features.columns
     assert "CustomerID" not in features.columns
+
+
+def test_load_model_ready_dataset_reads_versioned_csv(tmp_path: Path) -> None:
+    dataset_path = tmp_path / "telco_churn_model_ready.csv"
+    pd.DataFrame(
+        {
+            "MonthlyCharge": [80.0, 55.0],
+            "Contract": ["Month-to-Month", "Two Year"],
+            TARGET_COLUMN: [1, 0],
+        }
+    ).to_csv(dataset_path, index=False)
+
+    df = load_model_ready_dataset(dataset_path)
+    features, target = split_features_target(df)
+
+    assert df[TARGET_COLUMN].tolist() == [1, 0]
+    assert target.tolist() == [1, 0]
+    assert TARGET_COLUMN not in features.columns
