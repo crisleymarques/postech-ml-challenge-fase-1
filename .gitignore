@@ -27,6 +27,8 @@ build/
 
 # MLflow / generated artifacts
 mlruns/
+mlflow.db
+notebooks/mlflow.db
 outputs/
 data/processed/
 *.pkl

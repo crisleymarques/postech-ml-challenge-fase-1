@@ -202,7 +202,7 @@ def run_training(
             mlflow.log_artifact(str(feature_names_path), artifact_path="features")
             mlflow.sklearn.log_model(
                 sk_model=pipeline,
-                artifact_path="model",
+                name="model",
                 input_example=x_train.head(5),
             )
 
