@@ -51,6 +51,10 @@ Para manter o repositório organizado, utilizamos o **Ruff** como linter e forma
 * **Formatar código automaticamente:** `make format` (Execute sempre antes de um commit!)
 * **Rodar testes:** `make test`
 
+### MLflow
+
+Os scripts de treino usam o **tracking URI** definido em `src/config.py` (por padrão SQLite em `mlflow.db` na raiz do repositório). Para ver runs e métricas na UI, suba o MLflow apontando para o **mesmo** backend que o código (`make mlflow-ui`), e não espere que tudo apareça só em `mlruns/` se o experimento foi registrado no SQLite.
+
 ---
 
 ## 🌳 Fluxo de Trabalho (Git Flow)

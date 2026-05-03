@@ -10,7 +10,7 @@ dependencies = [
     "seaborn",
     "scikit-learn",
     "torch",
-    "mlflow",
+    "mlflow==3.11.1",
     "ipykernel",
     "openpyxl",
     "ruff",

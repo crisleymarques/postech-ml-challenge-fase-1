@@ -1,0 +1,9 @@
+{
+  "created_at_utc": "2026-05-03T19:14:24.457155+00:00",
+  "dataset_name": "telco_churn_model_ready",
+  "n_columns": 1172,
+  "n_rows": 7043,
+  "output_file": "data/processed/telco_churn_model_ready.csv",
+  "output_sha256": "21179a6cee86a92465e8df27bd77647083c895fe9cda5316d2e2afb9bfd335ae",
+  "target_column": "target"
+}
