@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from src.config import RAW_DATA_FILES
-from src.dataset_version import build_dataset_manifest
+from src.data import build_dataset_manifest
 
 
 def write_raw_files(data_dir: Path, suffix: str = "") -> None:

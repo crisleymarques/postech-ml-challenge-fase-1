@@ -5,17 +5,8 @@ from pathlib import Path
 from typing import Any
 
 from src.config import DATASET_NAME, RAW_DATA_DIR
-from src.data import get_source_file_paths
 
-CHUNK_SIZE = 1024 * 1024
-
-
-def file_sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as file:
-        for chunk in iter(lambda: file.read(CHUNK_SIZE), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
+from .loaders import file_sha256, get_source_file_paths
 
 
 def build_dataset_manifest(
