@@ -19,11 +19,10 @@ from src.config import (
     MLFLOW_EXPERIMENT_NAME,
     MLFLOW_TRACKING_URI,
     RANDOM_SEED,
-    RAW_DATA_DIR,
     TEST_SIZE,
     VAL_SIZE,
 )
-from src.data import load_telco_dataset, split_features_target
+from src.data import load_model_ready_dataset, split_features_target
 from src.evaluation.metrics import evaluate_torch_binary_classifier
 from src.features import build_preprocessor
 from src.models.mlp import TelcoMLP
@@ -36,9 +35,9 @@ def prepare_data(
     batch_size: int,
     val_size: float,
 ) -> tuple[DataLoader, DataLoader, torch.Tensor, pd.Series, int]:
-    """Carrega os dados, aplica o pipeline do sklearn e converte para tensores."""
+    """Carrega o dataset processado e converte para tensores."""
     torch.manual_seed(RANDOM_SEED)
-    df = load_telco_dataset(RAW_DATA_DIR)
+    df = load_model_ready_dataset()
     x, y = split_features_target(df)
 
     x_train_full, x_test, y_train_full, y_test = train_test_split(
