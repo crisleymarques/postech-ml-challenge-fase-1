@@ -1,7 +1,10 @@
 import pandas as pd
 import torch
+import logging
 from fastapi import APIRouter, HTTPException, Request
 from src.api.schemas import CustomerData, PredictionResponse
+
+logger = logging.getLogger("telco_api.router")
 
 # Cria um roteador para os endpoints
 router = APIRouter()
@@ -30,11 +33,13 @@ async def predict_churn(customer: CustomerData, request: Request):
             probability = torch.sigmoid(logits).item()
             prediction = int(probability >= 0.5)
 
+        risk = "High" if prediction == 1 else "Low"
+        logger.info(f"event=prediction_made probability={probability:.4f} prediction={prediction} risk_level={risk}")
         # Retorna validado pelo schema PredictionResponse
         return PredictionResponse(
             churn_probability=round(probability, 4),
             churn_prediction=prediction,
-            risk_level="High" if prediction == 1 else "Low"
+            risk_level=risk
         )
 
     except Exception as e:
