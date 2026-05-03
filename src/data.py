@@ -1,3 +1,5 @@
+import hashlib
+import json
 from pathlib import Path
 
 import pandas as pd
@@ -6,6 +8,7 @@ from src.config import (
     ID_COLUMNS,
     LEAKAGE_COLUMNS,
     PROCESSED_DATASET_PATH,
+    PROCESSED_MANIFEST_PATH,
     RAW_DATA_DIR,
     RAW_DATA_FILES,
     TARGET_COLUMN,
@@ -52,9 +55,16 @@ def load_telco_dataset(data_dir: Path = RAW_DATA_DIR) -> pd.DataFrame:
 
 def load_model_ready_dataset(
     dataset_path: Path = PROCESSED_DATASET_PATH,
+    manifest_path: Path | None = None,
     target_column: str = TARGET_COLUMN,
 ) -> pd.DataFrame:
     """Load the Git-versioned dataset produced by notebook 01."""
+    if manifest_path is None and dataset_path == PROCESSED_DATASET_PATH:
+        manifest_path = PROCESSED_MANIFEST_PATH
+
+    if manifest_path is not None and manifest_path.exists():
+        validate_processed_manifest(dataset_path, manifest_path)
+
     df = pd.read_csv(dataset_path)
     if target_column not in df.columns:
         raise ValueError(f"Expected column {target_column} in processed dataset.")
@@ -74,3 +84,25 @@ def split_features_target(
 
 def get_source_file_paths(data_dir: Path = RAW_DATA_DIR) -> list[Path]:
     return [data_dir / file_name for file_name in RAW_DATA_FILES.values()]
+
+
+def validate_processed_manifest(dataset_path: Path, manifest_path: Path) -> None:
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    expected_sha = manifest.get("output_sha256")
+    if not expected_sha:
+        raise ValueError(f"Missing output_sha256 in manifest: {manifest_path}")
+
+    actual_sha = file_sha256(dataset_path)
+    if actual_sha != expected_sha:
+        raise ValueError(
+            "Processed dataset hash mismatch: "
+            f"expected {expected_sha}, got {actual_sha}"
+        )
+
+
+def file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as file:
+        for chunk in iter(lambda: file.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()

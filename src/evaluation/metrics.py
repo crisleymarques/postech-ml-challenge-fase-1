@@ -42,7 +42,7 @@ def evaluate_torch_binary_classifier(
 
     return {
         **classification_metrics(y_test, predictions),
-        "roc_auc": roc_auc_score(y_test, probabilities),
+        "roc_auc": safe_roc_auc(y_test, probabilities),
     }
 
 
@@ -56,3 +56,13 @@ def classification_metrics(
         "recall": recall_score(y_true, y_pred, zero_division=0),
         "f1": f1_score(y_true, y_pred, zero_division=0),
     }
+
+
+def safe_roc_auc(y_true: Any, y_score: Any) -> float:
+    if pd.Series(y_true).nunique() < 2:
+        return float("nan")
+
+    try:
+        return roc_auc_score(y_true, y_score)
+    except ValueError:
+        return float("nan")
