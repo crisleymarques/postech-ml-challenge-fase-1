@@ -1,16 +1,11 @@
 import argparse
 import json
-import os
 import tempfile
 from pathlib import Path
 
 import mlflow
 import mlflow.sklearn
 import pandas as pd
-from sklearn.metrics import (
-    ConfusionMatrixDisplay,
-    confusion_matrix,
-)
 from sklearn.model_selection import StratifiedKFold, cross_validate, train_test_split
 from sklearn.pipeline import Pipeline
 
@@ -23,9 +18,14 @@ from src.config import (
     TARGET_COLUMN,
     TEST_SIZE,
 )
-from src.data import load_telco_dataset, split_features_target
-from src.dataset_version import build_dataset_manifest, write_dataset_manifest
+from src.data import (
+    build_dataset_manifest,
+    load_telco_dataset,
+    split_features_target,
+    write_dataset_manifest,
+)
 from src.evaluation.metrics import evaluate_sklearn_classifier as evaluate_model
+from src.evaluation.plots import save_confusion_matrix
 from src.models.baselines import build_model, build_pipeline
 from src.tracking.mlflow import log_dataset_version
 
@@ -77,40 +77,6 @@ def evaluate_model_cv(
         "cv_roc_auc": cv_results["test_roc_auc"].mean(),
         "cv_pr_auc": cv_results["test_pr_auc"].mean(),
     }
-
-
-def save_confusion_matrix(
-    pipeline: Pipeline,
-    x_test: pd.DataFrame,
-    y_test: pd.Series,
-    output_path: Path,
-) -> Path:
-    cache_dir = Path(__file__).resolve().parents[1] / "outputs" / "cache"
-    matplotlib_cache_dir = (
-        Path(__file__).resolve().parents[1] / "outputs" / "matplotlib"
-    )
-    cache_dir.mkdir(parents=True, exist_ok=True)
-    matplotlib_cache_dir.mkdir(parents=True, exist_ok=True)
-    os.environ.setdefault("XDG_CACHE_HOME", str(cache_dir))
-    os.environ.setdefault("MPLCONFIGDIR", str(matplotlib_cache_dir))
-
-    import matplotlib
-    import matplotlib.pyplot as plt
-
-    matplotlib.use("Agg")
-
-    predictions = pipeline.predict(x_test)
-    matrix = confusion_matrix(y_test, predictions)
-    display = ConfusionMatrixDisplay(
-        confusion_matrix=matrix,
-        display_labels=["Stayed", "Churned"],
-    )
-    display.plot(values_format="d", cmap="Blues")
-    plt.title("Confusion Matrix")
-    plt.tight_layout()
-    plt.savefig(output_path)
-    plt.close()
-    return output_path
 
 
 def save_feature_names(pipeline: Pipeline, output_path: Path) -> Path:
