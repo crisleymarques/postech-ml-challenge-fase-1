@@ -205,7 +205,7 @@ def run_training(
 
         mlflow.pytorch.log_model(
             model,
-            "model",
+            name="model",
             serialization_format="pt2",
             input_example=input_example,
         )
