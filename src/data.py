@@ -6,6 +6,7 @@ from src.config import (
     DATA_DIR,
     ID_COLUMNS,
     LEAKAGE_COLUMNS,
+    PROCESSED_DATASET_PATH,
     RAW_DATA_FILES,
     TARGET_COLUMN,
 )
@@ -46,6 +47,18 @@ def load_telco_dataset(data_dir: Path = DATA_DIR) -> pd.DataFrame:
         raise ValueError("Expected column ChurnValue to build target.")
 
     df[TARGET_COLUMN] = (df["ChurnValue"] > 0).astype(int)
+    return df
+
+
+def load_model_ready_dataset(
+    dataset_path: Path = PROCESSED_DATASET_PATH,
+    target_column: str = TARGET_COLUMN,
+) -> pd.DataFrame:
+    """Load the Git-versioned dataset produced by notebook 01."""
+    df = pd.read_csv(dataset_path)
+    if target_column not in df.columns:
+        raise ValueError(f"Expected column {target_column} in processed dataset.")
+    df[target_column] = df[target_column].astype(int)
     return df
 
 
