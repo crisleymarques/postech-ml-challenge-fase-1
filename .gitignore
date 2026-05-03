@@ -27,11 +27,11 @@ build/
 
 # MLflow / generated artifacts
 mlruns/
-outputs/
+mlflow.db
 notebooks/mlflow.db
-notebooks/mlruns/
+outputs/
 data/processed/*
-!data/processed/.gitkeep
-!data/processed/Telco_customer_churn_encoded.csv
+!data/processed/telco_churn_model_ready.csv
+!data/processed/telco_churn_model_ready_manifest.json
 *.pkl
 *.joblib
