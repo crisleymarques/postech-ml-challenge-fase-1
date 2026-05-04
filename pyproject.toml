@@ -15,6 +15,7 @@ dependencies = [
     "openpyxl",
     "ruff",
     "pytest",
+    "httpx",
 ]
 
 [tool.ruff]
