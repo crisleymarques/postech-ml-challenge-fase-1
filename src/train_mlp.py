@@ -1,6 +1,7 @@
 import argparse
 import logging
 import tempfile
+import joblib
 from pathlib import Path
 
 import mlflow
@@ -79,6 +80,10 @@ def prepare_data(
     x_train_processed = preprocessor.fit_transform(x_train)
     x_val_processed = preprocessor.transform(x_val)
     x_test_processed = preprocessor.transform(x_test)
+
+    models_dir = Path(__file__).resolve().parents[1] / "models"
+    models_dir.mkdir(parents=True, exist_ok=True)
+    joblib.dump(preprocessor, models_dir / "preprocessor_pipeline.pkl")
 
     x_train_tensor = torch.tensor(x_train_processed, dtype=torch.float32)
     y_train_tensor = torch.tensor(y_train.values, dtype=torch.float32).view(-1, 1)
@@ -209,6 +214,8 @@ def run_training(
             serialization_format="pt2",
             input_example=input_example,
         )
+
+    torch.save(model.state_dict(), "models/mlp_model.pth")
 
     return metrics
 

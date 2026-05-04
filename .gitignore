@@ -34,4 +34,7 @@ data/processed/*
 !data/processed/telco_churn_model_ready.csv
 !data/processed/telco_churn_model_ready_manifest.json
 *.pkl
+!models/preprocessor_pipeline.pkl
+*.pth
+!models/mlp_model.pth
 *.joblib

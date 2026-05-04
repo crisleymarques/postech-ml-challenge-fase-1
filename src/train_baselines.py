@@ -77,11 +77,11 @@ def evaluate_model(
 
 
 def evaluate_model_cv(
-        pipeline: Pipeline,
-        x: pd.DataFrame,
-        y: pd.Series,
-        random_seed: int = 42,
-        n_splits: int = 5
+    pipeline: Pipeline,
+    x: pd.DataFrame,
+    y: pd.Series,
+    random_seed: int = 42,
+    n_splits: int = 5,
 ) -> dict[str, float]:
     """
     Avalia um pipeline de machine learning fornecido usando validação cruzada e calcula
@@ -110,15 +110,17 @@ def evaluate_model_cv(
         e Precision-Recall AUC (chave: "cv_pr_auc").
     :rtype: dict[str, float]
     """
-    cv_strategy = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=random_seed)
+    cv_strategy = StratifiedKFold(
+        n_splits=n_splits, shuffle=True, random_state=random_seed
+    )
 
     scoring_metrics = {
-        'accuracy': 'accuracy',
-        'precision': 'precision',
-        'recall': 'recall',
-        'f1': 'f1',
-        'roc_auc': 'roc_auc',
-        'pr_auc': 'average_precision'
+        "accuracy": "accuracy",
+        "precision": "precision",
+        "recall": "recall",
+        "f1": "f1",
+        "roc_auc": "roc_auc",
+        "pr_auc": "average_precision",
     }
 
     cv_results = cross_validate(
@@ -127,16 +129,16 @@ def evaluate_model_cv(
         y,
         cv=cv_strategy,
         scoring=scoring_metrics,
-        return_train_score=False
+        return_train_score=False,
     )
 
     return {
-        "cv_accuracy": cv_results['test_accuracy'].mean(),
-        "cv_precision": cv_results['test_precision'].mean(),
-        "cv_recall": cv_results['test_recall'].mean(),
-        "cv_f1": cv_results['test_f1'].mean(),
-        "cv_roc_auc": cv_results['test_roc_auc'].mean(),
-        "cv_pr_auc": cv_results['test_pr_auc'].mean(),
+        "cv_accuracy": cv_results["test_accuracy"].mean(),
+        "cv_precision": cv_results["test_precision"].mean(),
+        "cv_recall": cv_results["test_recall"].mean(),
+        "cv_f1": cv_results["test_f1"].mean(),
+        "cv_roc_auc": cv_results["test_roc_auc"].mean(),
+        "cv_pr_auc": cv_results["test_pr_auc"].mean(),
     }
 
 
@@ -245,10 +247,12 @@ def run_training(
         mlflow.log_metrics(metrics)
 
         cv_metrics = evaluate_model_cv(
-            pipeline=build_pipeline(model_name, x, random_seed),  # passa um pipeline "limpo"
+            pipeline=build_pipeline(
+                model_name, x, random_seed
+            ),  # passa um pipeline "limpo"
             x=x,
             y=y,
-            random_seed=random_seed
+            random_seed=random_seed,
         )
         mlflow.log_metrics(cv_metrics)
 
