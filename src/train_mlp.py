@@ -10,18 +10,10 @@ import pandas as pd
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from sklearn.metrics import (
-    accuracy_score,
-    f1_score,
-    precision_score,
-    recall_score,
-    roc_auc_score,
-)
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, TensorDataset
 
 from src.config import (
-    DATA_DIR,
     EARLY_STOPPING_MIN_DELTA,
     EARLY_STOPPING_MONITOR,
     EARLY_STOPPING_PATIENCE,
@@ -31,37 +23,22 @@ from src.config import (
     TEST_SIZE,
     VAL_SIZE,
 )
-from src.data import load_telco_dataset, split_features_target
+from src.data import load_model_ready_dataset, split_features_target
+from src.evaluation.metrics import evaluate_torch_binary_classifier
 from src.features import build_preprocessor
-from src.mlp_training import EarlyStopping, fit
+from src.models.mlp import TelcoMLP
+from src.training.mlp import EarlyStopping, fit
 
 logger = logging.getLogger(__name__)
-
-
-class TelcoMLP(nn.Module):
-    def __init__(self, input_dim: int, hidden_dim: int, dropout_rate: float = 0.2):
-        super().__init__()
-        self.network = nn.Sequential(
-            nn.Linear(input_dim, hidden_dim),
-            nn.ReLU(),
-            nn.Dropout(dropout_rate),
-            nn.Linear(hidden_dim, hidden_dim // 2),
-            nn.ReLU(),
-            nn.Dropout(dropout_rate),
-            nn.Linear(hidden_dim // 2, 1),
-        )
-
-    def forward(self, x):
-        return self.network(x)
 
 
 def prepare_data(
     batch_size: int,
     val_size: float,
 ) -> tuple[DataLoader, DataLoader, torch.Tensor, pd.Series, int]:
-    """Carrega os dados, aplica o pipeline do sklearn e converte para tensores."""
+    """Carrega o dataset processado e converte para tensores."""
     torch.manual_seed(RANDOM_SEED)
-    df = load_telco_dataset(DATA_DIR)
+    df = load_model_ready_dataset()
     x, y = split_features_target(df)
 
     x_train_full, x_test, y_train_full, y_test = train_test_split(
@@ -105,29 +82,6 @@ def prepare_data(
     input_dim = x_train_tensor.shape[1]
 
     return train_loader, val_loader, x_test_tensor, y_test, input_dim
-
-
-def evaluate_model(
-    model: nn.Module,
-    x_test_tensor: torch.Tensor,
-    y_test: pd.Series,
-    device: torch.device,
-) -> dict[str, float]:
-    """Avalia o modelo treinado com os dados de teste e retorna as métricas."""
-    model.eval()
-    with torch.no_grad():
-        test_outputs = model(x_test_tensor.to(device))
-        probabilities = torch.sigmoid(test_outputs).cpu().numpy().reshape(-1)
-        predictions = (probabilities >= 0.5).astype(int)
-
-    metrics = {
-        "accuracy": accuracy_score(y_test, predictions),
-        "precision": precision_score(y_test, predictions, zero_division=0),
-        "recall": recall_score(y_test, predictions, zero_division=0),
-        "f1": f1_score(y_test, predictions, zero_division=0),
-        "roc_auc": roc_auc_score(y_test, probabilities),
-    }
-    return metrics
 
 
 def run_training(
@@ -193,7 +147,7 @@ def run_training(
             mlflow_logger=mlflow,
         )
 
-        metrics = evaluate_model(model, x_test_tensor, y_test, device)
+        metrics = evaluate_torch_binary_classifier(model, x_test_tensor, y_test, device)
         mlflow.log_metrics(metrics)
         mlflow.log_metrics(
             {
