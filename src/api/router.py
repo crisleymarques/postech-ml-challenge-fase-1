@@ -9,10 +9,12 @@ logger = logging.getLogger("telco_api.router")
 # Cria um roteador para os endpoints
 router = APIRouter()
 
+
 @router.get("/health", tags=["Health"])
 async def health_check():
     """Endpoint para monitorar se a API está online."""
     return {"status": "ok", "message": "API modularizada de Churn operante."}
+
 
 @router.post("/predict", tags=["Prediction"], response_model=PredictionResponse)
 async def predict_churn(customer: CustomerData, request: Request):
@@ -34,13 +36,15 @@ async def predict_churn(customer: CustomerData, request: Request):
             prediction = int(probability >= 0.5)
 
         risk = "High" if prediction == 1 else "Low"
-        logger.info(f"event=prediction_made probability={probability:.4f} prediction={prediction} risk_level={risk}")
+        logger.info(
+            f"event=prediction_made probability={probability:.4f} prediction={prediction} risk_level={risk}"
+        )
         # Retorna validado pelo schema PredictionResponse
         return PredictionResponse(
             churn_probability=round(probability, 4),
             churn_prediction=prediction,
-            risk_level=risk
+            risk_level=risk,
         )
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e

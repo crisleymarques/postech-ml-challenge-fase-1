@@ -13,9 +13,10 @@ from src.api.router import router
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S"
+    datefmt="%Y-%m-%d %H:%M:%S",
 )
 logger = logging.getLogger("telco_api")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -28,7 +29,10 @@ async def lifespan(app: FastAPI):
         pipeline_path = project_root / "models" / "preprocessor_pipeline.pkl"
         loaded_artifact = joblib.load(pipeline_path)
 
-        if hasattr(loaded_artifact, "named_steps") and "preprocess" in loaded_artifact.named_steps:
+        if (
+            hasattr(loaded_artifact, "named_steps")
+            and "preprocess" in loaded_artifact.named_steps
+        ):
             preprocessor = loaded_artifact.named_steps["preprocess"]
         else:
             preprocessor = loaded_artifact
@@ -38,7 +42,9 @@ async def lifespan(app: FastAPI):
         # Inicializa a arquitetura e carrega os pesos
         model_path = project_root / "models" / "mlp_model.pth"
         model = TelcoMLP(input_dim=input_dim, hidden_dim=64)
-        model.load_state_dict(torch.load(model_path, weights_only=True, map_location="cpu"))
+        model.load_state_dict(
+            torch.load(model_path, weights_only=True, map_location="cpu")
+        )
         model.eval()
 
         # Salva no estado da aplicação
@@ -60,8 +66,9 @@ app = FastAPI(
     title="Telco Churn Prediction API",
     description="API para inferência do modelo MLP PyTorch de previsão de Churn.",
     version="1.1.0",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
+
 
 @app.middleware("http")
 async def add_latency_logging(request: Request, call_next):
@@ -80,5 +87,6 @@ async def add_latency_logging(request: Request, call_next):
     )
 
     return response
+
 
 app.include_router(router)

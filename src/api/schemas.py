@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 
+
 # Contrato de Entrada (Pydantic)
 class CustomerData(BaseModel):
     Gender: str
@@ -48,6 +49,7 @@ class CustomerData(BaseModel):
     TotalRevenue: float
     SatisfactionScore: int
     CLTV: float
+
 
 class PredictionResponse(BaseModel):
     churn_probability: float

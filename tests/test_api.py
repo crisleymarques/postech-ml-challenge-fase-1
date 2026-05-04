@@ -2,6 +2,7 @@ from fastapi.testclient import TestClient
 from src.main import app
 import pytest
 
+
 @pytest.fixture(scope="module")
 def client():
     with TestClient(app) as c:
@@ -64,7 +65,7 @@ def test_predict_success(client):
         "TotalLongDistanceCharges": 0.0,
         "TotalRevenue": 70.0,
         "SatisfactionScore": 3,
-        "CLTV": 5000.0
+        "CLTV": 5000.0,
     }
 
     response = client.post("/predict", json=payload)
@@ -82,7 +83,7 @@ def test_predict_validation_error(client):
 
     payload = {
         "Gender": "Female",
-        "Age": "sessenta_e_cinco"  # Tipo incorreto (espera int)
+        "Age": "sessenta_e_cinco",  # Tipo incorreto (espera int)
     }
 
     response = client.post("/predict", json=payload)
