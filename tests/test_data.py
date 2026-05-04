@@ -1,9 +1,22 @@
+<<<<<<< HEAD
+=======
+import json
+>>>>>>> f8290b60dbc7640f2f4cc0fb4d3618e51dad89f7
 from pathlib import Path
 
 import pandas as pd
 
 from src.config import RAW_DATA_FILES, TARGET_COLUMN
+<<<<<<< HEAD
 from src.data import load_model_ready_dataset, load_telco_dataset, split_features_target
+=======
+from src.data import (
+    file_sha256,
+    load_model_ready_dataset,
+    load_telco_dataset,
+    split_features_target,
+)
+>>>>>>> f8290b60dbc7640f2f4cc0fb4d3618e51dad89f7
 
 
 def test_loader_merges_tables_and_removes_leakage_from_features(tmp_path: Path) -> None:
@@ -74,3 +87,35 @@ def test_load_model_ready_dataset_reads_versioned_csv(tmp_path: Path) -> None:
     assert df[TARGET_COLUMN].tolist() == [1, 0]
     assert target.tolist() == [1, 0]
     assert TARGET_COLUMN not in features.columns
+<<<<<<< HEAD
+=======
+
+
+def test_load_model_ready_dataset_validates_manifest_hash(tmp_path: Path) -> None:
+    dataset_path = tmp_path / "telco_churn_model_ready.csv"
+    manifest_path = tmp_path / "telco_churn_model_ready_manifest.json"
+
+    pd.DataFrame(
+        {
+            "MonthlyCharge": [80.0, 55.0],
+            "Contract": ["Month-to-Month", "Two Year"],
+            TARGET_COLUMN: [1, 0],
+        }
+    ).to_csv(dataset_path, index=False)
+
+    manifest_path.write_text(
+        json.dumps({"output_sha256": file_sha256(dataset_path)}),
+        encoding="utf-8",
+    )
+    load_model_ready_dataset(dataset_path=dataset_path, manifest_path=manifest_path)
+
+    manifest_path.write_text(
+        json.dumps({"output_sha256": "invalid"}),
+        encoding="utf-8",
+    )
+    try:
+        load_model_ready_dataset(dataset_path=dataset_path, manifest_path=manifest_path)
+        raise AssertionError("Expected hash mismatch to raise ValueError")
+    except ValueError as exc:
+        assert "hash mismatch" in str(exc)
+>>>>>>> f8290b60dbc7640f2f4cc0fb4d3618e51dad89f7

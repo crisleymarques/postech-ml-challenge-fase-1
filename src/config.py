@@ -2,6 +2,10 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = PROJECT_ROOT / "data"
+<<<<<<< HEAD
+=======
+RAW_DATA_DIR = DATA_DIR / "raw"
+>>>>>>> f8290b60dbc7640f2f4cc0fb4d3618e51dad89f7
 PROCESSED_DATA_DIR = DATA_DIR / "processed"
 OUTPUTS_DIR = PROJECT_ROOT / "outputs"
 MLRUNS_DIR = PROJECT_ROOT / "mlruns"

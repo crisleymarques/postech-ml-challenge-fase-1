@@ -1,6 +1,10 @@
 import argparse
 import logging
 import tempfile
+<<<<<<< HEAD
+=======
+import joblib
+>>>>>>> f8290b60dbc7640f2f4cc0fb4d3618e51dad89f7
 from pathlib import Path
 
 import mlflow
@@ -9,6 +13,7 @@ import pandas as pd
 import torch
 import torch.nn as nn
 import torch.optim as optim
+<<<<<<< HEAD
 from sklearn.metrics import (
     accuracy_score,
     f1_score,
@@ -16,11 +21,16 @@ from sklearn.metrics import (
     recall_score,
     roc_auc_score,
 )
+=======
+>>>>>>> f8290b60dbc7640f2f4cc0fb4d3618e51dad89f7
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, TensorDataset
 
 from src.config import (
+<<<<<<< HEAD
     DATA_DIR,
+=======
+>>>>>>> f8290b60dbc7640f2f4cc0fb4d3618e51dad89f7
     EARLY_STOPPING_MIN_DELTA,
     EARLY_STOPPING_MONITOR,
     EARLY_STOPPING_PATIENCE,
@@ -30,13 +40,22 @@ from src.config import (
     TEST_SIZE,
     VAL_SIZE,
 )
+<<<<<<< HEAD
 from src.data import load_telco_dataset, split_features_target
 from src.features import build_preprocessor
 from src.mlp_training import EarlyStopping, fit
+=======
+from src.data import load_model_ready_dataset, split_features_target
+from src.evaluation.metrics import evaluate_torch_binary_classifier
+from src.features import build_preprocessor
+from src.models.mlp import TelcoMLP
+from src.training.mlp import EarlyStopping, fit
+>>>>>>> f8290b60dbc7640f2f4cc0fb4d3618e51dad89f7
 
 logger = logging.getLogger(__name__)
 
 
+<<<<<<< HEAD
 class TelcoMLP(nn.Module):
     def __init__(self, input_dim: int, hidden_dim: int, dropout_rate: float = 0.2):
         super().__init__()
@@ -54,13 +73,21 @@ class TelcoMLP(nn.Module):
         return self.network(x)
 
 
+=======
+>>>>>>> f8290b60dbc7640f2f4cc0fb4d3618e51dad89f7
 def prepare_data(
     batch_size: int,
     val_size: float,
 ) -> tuple[DataLoader, DataLoader, torch.Tensor, pd.Series, int]:
+<<<<<<< HEAD
     """Carrega os dados, aplica o pipeline do sklearn e converte para tensores."""
     torch.manual_seed(RANDOM_SEED)
     df = load_telco_dataset(DATA_DIR)
+=======
+    """Carrega o dataset processado e converte para tensores."""
+    torch.manual_seed(RANDOM_SEED)
+    df = load_model_ready_dataset()
+>>>>>>> f8290b60dbc7640f2f4cc0fb4d3618e51dad89f7
     x, y = split_features_target(df)
 
     x_train_full, x_test, y_train_full, y_test = train_test_split(
@@ -80,6 +107,13 @@ def prepare_data(
     x_val_processed = preprocessor.transform(x_val)
     x_test_processed = preprocessor.transform(x_test)
 
+<<<<<<< HEAD
+=======
+    models_dir = Path(__file__).resolve().parents[1] / "models"
+    models_dir.mkdir(parents=True, exist_ok=True)
+    joblib.dump(preprocessor, models_dir / "preprocessor_pipeline.pkl")
+
+>>>>>>> f8290b60dbc7640f2f4cc0fb4d3618e51dad89f7
     x_train_tensor = torch.tensor(x_train_processed, dtype=torch.float32)
     y_train_tensor = torch.tensor(y_train.values, dtype=torch.float32).view(-1, 1)
     x_val_tensor = torch.tensor(x_val_processed, dtype=torch.float32)
@@ -102,6 +136,7 @@ def prepare_data(
     return train_loader, val_loader, x_test_tensor, y_test, input_dim
 
 
+<<<<<<< HEAD
 def evaluate_model(
     model: nn.Module,
     x_test_tensor: torch.Tensor,
@@ -125,6 +160,8 @@ def evaluate_model(
     return metrics
 
 
+=======
+>>>>>>> f8290b60dbc7640f2f4cc0fb4d3618e51dad89f7
 def run_training(
     hidden_dim: int,
     learning_rate: float,
@@ -140,6 +177,10 @@ def run_training(
 
     mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
     mlflow.set_experiment(MLFLOW_EXPERIMENT_NAME)
+<<<<<<< HEAD
+=======
+    logging.getLogger("mlflow.pytorch").setLevel(logging.ERROR)
+>>>>>>> f8290b60dbc7640f2f4cc0fb4d3618e51dad89f7
 
     train_loader, val_loader, x_test_tensor, y_test, input_dim = prepare_data(
         batch_size=batch_size,
@@ -187,7 +228,11 @@ def run_training(
             mlflow_logger=mlflow,
         )
 
+<<<<<<< HEAD
         metrics = evaluate_model(model, x_test_tensor, y_test, device)
+=======
+        metrics = evaluate_torch_binary_classifier(model, x_test_tensor, y_test, device)
+>>>>>>> f8290b60dbc7640f2f4cc0fb4d3618e51dad89f7
         mlflow.log_metrics(metrics)
         mlflow.log_metrics(
             {
@@ -206,10 +251,18 @@ def run_training(
         mlflow.pytorch.log_model(
             model,
             name="model",
+<<<<<<< HEAD
             serialization_format="pt2",
             input_example=input_example,
         )
 
+=======
+            input_example=input_example,
+        )
+
+    torch.save(model.state_dict(), "models/mlp_model.pth")
+
+>>>>>>> f8290b60dbc7640f2f4cc0fb4d3618e51dad89f7
     return metrics
 
 
@@ -275,4 +328,8 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+<<<<<<< HEAD
     main()
+=======
+    main()
+>>>>>>> f8290b60dbc7640f2f4cc0fb4d3618e51dad89f7

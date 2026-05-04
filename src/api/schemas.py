@@ -1,0 +1,57 @@
+from pydantic import BaseModel
+
+
+# Contrato de Entrada (Pydantic)
+class CustomerData(BaseModel):
+    Gender: str
+    Age: int
+    Under30: str
+    SeniorCitizen: str
+    Married: str
+    Dependents: str
+    NumberofDependents: int
+    Country: str
+    State: str
+    City: str
+    ZipCode: int
+    LatLong: str
+    Latitude: float
+    Longitude: float
+    Population: int
+    Quarter_x: str
+    Quarter_y: str
+    ReferredaFriend: str
+    NumberofReferrals: int
+    TenureinMonths: int
+    Offer: str
+    PhoneService: str
+    AvgMonthlyLongDistanceCharges: float
+    MultipleLines: str
+    InternetService: str
+    InternetType: str
+    AvgMonthlyGBDownload: float
+    OnlineSecurity: str
+    OnlineBackup: str
+    DeviceProtectionPlan: str
+    PremiumTechSupport: str
+    StreamingTV: str
+    StreamingMovies: str
+    StreamingMusic: str
+    UnlimitedData: str
+    Contract: str
+    PaperlessBilling: str
+    PaymentMethod: str
+    MonthlyCharge: float
+    TotalCharges: float
+    TotalRefunds: float
+    TotalExtraDataCharges: float
+    TotalLongDistanceCharges: float
+    TotalRevenue: float
+    SatisfactionScore: int
+    CLTV: float
+
+
+class PredictionResponse(BaseModel):
+    churn_probability: float
+    churn_prediction: int
+    risk_level: str
