@@ -27,8 +27,12 @@ build/
 
 # MLflow / generated artifacts
 mlruns/
+mlflow.db
+notebooks/mlflow.db
 outputs/
-data/processed/
+data/processed/*
+!data/processed/telco_churn_model_ready.csv
+!data/processed/telco_churn_model_ready_manifest.json
 *.pkl
 *.joblib
 mlflow.db
