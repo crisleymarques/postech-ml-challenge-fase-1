@@ -1,0 +1,46 @@
+{
+  "dataset_name": "telco_churn_model_ready",
+  "dataset_version": "e2b44e32aec0bc015c923deec5c00fddfdfaa0f6776efb0c9a22eaca7f4e3b74",
+  "created_at_utc": "2026-05-03T02:03:38.610785+00:00",
+  "random_seed": 42,
+  "source_type": "raw_excel",
+  "source_files": [
+    "Telco_customer_churn_demographics.xlsx",
+    "Telco_customer_churn_location.xlsx",
+    "Telco_customer_churn_services.xlsx",
+    "Telco_customer_churn_population.xlsx",
+    "Telco_customer_churn_status.xlsx"
+  ],
+  "output_file": "data/processed/telco_churn_model_ready.csv",
+  "output_sha256": "e2b44e32aec0bc015c923deec5c00fddfdfaa0f6776efb0c9a22eaca7f4e3b74",
+  "target_column": "target",
+  "rows": 7043,
+  "columns": 42,
+  "feature_columns": 41,
+  "target_distribution": {
+    "0": 5174,
+    "1": 1869
+  },
+  "target_positive_rate": 0.2653698707936959,
+  "removed_columns": [
+    "CLTV",
+    "ChurnCategory",
+    "ChurnLabel",
+    "ChurnReason",
+    "ChurnScore",
+    "ChurnValue",
+    "CustomerID",
+    "CustomerStatus"
+  ],
+  "removed_constant_columns": [
+    "Country",
+    "State",
+    "Quarter_x",
+    "Quarter_y"
+  ],
+  "notes": [
+    "Dataset final contem features observaveis e target binario.",
+    "Colunas de churn posterior, status, score, motivo/categoria, IDs e CLTV foram removidas para reduzir leakage.",
+    "Transformacoes estatisticas como imputacao, escala e one-hot devem ser ajustadas apenas no treino no notebook 02."
+  ]
+}

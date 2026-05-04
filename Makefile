@@ -24,7 +24,7 @@ train-mlp:
 	$(PYTHON) -m src.train_mlp --epochs 100 --patience 10 --batch-size 32
 
 mlflow-ui:
-	$(PYTHON) -m mlflow ui --backend-store-uri file:./mlruns
+	$(PYTHON) -m mlflow ui --backend-store-uri "sqlite:///$(CURDIR)/mlflow.db"
 
 clean:
 	rm -rf `find . -type d -name __pycache__`
