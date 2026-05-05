@@ -144,10 +144,10 @@ uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 Exemplo rápido (ajuste o host/porta se necessário):
 
 ```bash
-curl -s http://127.0.0.1:8000/health
+curl -s http://127.0.0.1:5000/health
 ```
 
-Documentação interativa: `http://127.0.0.1:8000/docs`
+Documentação interativa: `http://127.0.0.1:5000/docs`
 
 ---
 
@@ -169,7 +169,6 @@ Os testes da API (`tests/test_api.py`) carregam a aplicação com `TestClient` e
 ```
 postech-ml-challenge-fase-1/
 ├── README.md
-├── Tech Challenge Fase 01 (1).pdf   # enunciado / checklist institucional
 ├── pyproject.toml                   # dependências e metadados do pacote
 ├── Makefile                         # install, lint, format, test, train-*, mlflow-ui
 ├── src/
