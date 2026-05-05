@@ -1,6 +1,7 @@
 .PHONY: install lint format test quality train-baselines train-mlp mlflow-ui clean
 
 PYTHON ?= python3
+MLFLOW_TRACKING_URI ?= sqlite:///$(abspath mlflow.db)
 
 install:
 	$(PYTHON) -m pip install --upgrade pip
@@ -24,7 +25,7 @@ train-mlp:
 	$(PYTHON) -m src.train_mlp --epochs 100 --patience 10 --batch-size 32
 
 mlflow-ui:
-	$(PYTHON) -m mlflow ui --backend-store-uri file:./mlruns
+	$(PYTHON) -m mlflow ui --backend-store-uri "$(MLFLOW_TRACKING_URI)"
 
 clean:
 	rm -rf `find . -type d -name __pycache__`

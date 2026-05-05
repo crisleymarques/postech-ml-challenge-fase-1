@@ -51,6 +51,10 @@ Para manter o repositório organizado, utilizamos o **Ruff** como linter e forma
 * **Formatar código automaticamente:** `make format` (Execute sempre antes de um commit!)
 * **Rodar testes:** `make test`
 
+### MLflow
+
+Os scripts de treino usam o **tracking URI** definido em `src/config.py` (por padrão SQLite em `mlflow.db` na raiz do repositório). Para ver runs e métricas na UI, suba o MLflow apontando para o **mesmo** backend que o código (`make mlflow-ui`), e não espere que tudo apareça só em `mlruns/` se o experimento foi registrado no SQLite.
+
 ---
 
 ## 🌳 Fluxo de Trabalho (Git Flow)
@@ -66,10 +70,14 @@ Para manter o repositório organizado, utilizamos o **Ruff** como linter e forma
 ---
 
 ## 📂 Estrutura do Projeto
-- `src/`: Scripts Python com a lógica do projeto (loaders, trainers, etc).
+- `src/`: Código Python reutilizável e entrypoints de treino.
+  - `src/models/`: Definições de modelos (MLP e baselines).
+  - `src/training/`: Loops de treino, validação e early stopping.
+  - `src/evaluation/`: Métricas e avaliação de modelos.
+  - `src/tracking/`: Integrações de tracking, como MLflow.
 - `notebooks/`: Análises exploratórias e prototipagem.
-- `data/`: Armazenamento de datasets (arquivos grandes são ignorados pelo git).
+- `data/raw/`: Dados brutos de entrada.
+- `data/processed/`: Dados tratados ou derivados.
 - `models/`: Artefatos de modelos treinados.
 - `tests/`: Testes unitários e de integração.
 - `docs/`: Documentação extra e ML Canvas.
-```
