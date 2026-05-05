@@ -141,13 +141,13 @@ uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 | GET    | `/health`   | Saúde do serviço |
 | POST   | `/predict`  | JSON com todas as chaves do schema `CustomerData` em `src/api/schemas.py` |
 
-Exemplo rápido (ajuste o host/porta se necessário):
+#### Acesse
 
 ```bash
-curl -s http://127.0.0.1:5000/health
+curl -s http://127.0.0.1:8000/health
 ```
 
-Documentação interativa: `http://127.0.0.1:5000/docs`
+Documentação interativa: `http://127.0.0.1:8000/docs`
 
 ---
 
@@ -201,4 +201,3 @@ postech-ml-challenge-fase-1/
 |-----------|----------|
 | [`docs/ml_canvas.md`](docs/ml_canvas.md) | ML Canvas (tarefa, dados, deploy, monitoramento) |
 | [`docs/decisao_metricas_etapa_1.md`](docs/decisao_metricas_etapa_1.md) | Métrica principal (PR-AUC) e complementares |
-| `Tech Challenge Fase 01 (1).pdf` | Requisitos formais da fase (PDF) |
