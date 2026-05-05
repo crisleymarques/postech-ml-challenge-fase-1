@@ -1,19 +1,136 @@
 import argparse
 import json
+<<<<<<< HEAD
+import os
+=======
+>>>>>>> f8290b60dbc7640f2f4cc0fb4d3618e51dad89f7
 import tempfile
 from pathlib import Path
 
 import mlflow
 import mlflow.sklearn
 import pandas as pd
+<<<<<<< HEAD
+from sklearn.dummy import DummyClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import (
+    ConfusionMatrixDisplay,
+    accuracy_score,
+    confusion_matrix,
+    f1_score,
+    precision_score,
+    recall_score,
+    roc_auc_score,
+)
+from sklearn.model_selection import train_test_split, StratifiedKFold, cross_validate
+from sklearn.pipeline import Pipeline
+
+from src.config import (
+    DATA_DIR,
+=======
 from sklearn.model_selection import StratifiedKFold, cross_validate, train_test_split
 from sklearn.pipeline import Pipeline
 
 from src.config import (
+>>>>>>> f8290b60dbc7640f2f4cc0fb4d3618e51dad89f7
     LEAKAGE_COLUMNS,
     MLFLOW_EXPERIMENT_NAME,
     MLFLOW_TRACKING_URI,
     RANDOM_SEED,
+<<<<<<< HEAD
+    TARGET_COLUMN,
+    TEST_SIZE,
+)
+from src.data import load_telco_dataset, split_features_target
+from src.dataset_version import build_dataset_manifest, write_dataset_manifest
+from src.features import build_preprocessor
+
+
+def build_model(model_name: str, random_seed: int) -> object:
+    if model_name == "dummy_classifier":
+        return DummyClassifier(strategy="most_frequent", random_state=random_seed)
+    if model_name == "logistic_regression":
+        return LogisticRegression(
+            class_weight="balanced",
+            max_iter=1000,
+            random_state=random_seed,
+        )
+    raise ValueError(f"Unsupported model: {model_name}")
+
+
+def build_pipeline(model_name: str, x: pd.DataFrame, random_seed: int) -> Pipeline:
+    return Pipeline(
+        steps=[
+            ("preprocess", build_preprocessor(x)),
+            ("model", build_model(model_name, random_seed)),
+        ]
+    )
+
+
+def evaluate_model(
+    pipeline: Pipeline,
+    x_test: pd.DataFrame,
+    y_test: pd.Series,
+) -> dict[str, float]:
+    predictions = pipeline.predict(x_test)
+    metrics = {
+        "accuracy": accuracy_score(y_test, predictions),
+        "precision": precision_score(y_test, predictions, zero_division=0),
+        "recall": recall_score(y_test, predictions, zero_division=0),
+        "f1": f1_score(y_test, predictions, zero_division=0),
+    }
+
+    if hasattr(pipeline, "predict_proba"):
+        positive_scores = pipeline.predict_proba(x_test)[:, 1]
+        metrics["roc_auc"] = roc_auc_score(y_test, positive_scores)
+
+    return metrics
+
+
+def evaluate_model_cv(
+        pipeline: Pipeline,
+        x: pd.DataFrame,
+        y: pd.Series,
+        random_seed: int = 42,
+        n_splits: int = 5
+) -> dict[str, float]:
+    """
+    Avalia um pipeline de machine learning fornecido usando validação cruzada e calcula
+    diversas métricas de desempenho de classificação, incluindo acurácia, precisão, recall,
+    F1-score, ROC AUC e Precision-Recall AUC.
+
+    A função utiliza validação cruzada k-fold estratificada para garantir que a distribuição
+    das classes seja preservada em todas as dobras (folds). Os resultados são agregados sobre
+    todas as dobras e retornados como um dicionário contendo os valores médios para cada métrica.
+
+    :param pipeline: Um objeto de pipeline do scikit-learn que encapsula as etapas de
+        pré-processamento e o modelo de machine learning a ser avaliado.
+    :type pipeline: Pipeline
+    :param x: Conjunto de atributos como um DataFrame do pandas.
+    :type x: pd.DataFrame
+    :param y: Vetor de rótulos como uma Series do pandas.
+    :type y: pd.Series
+    :param random_seed: Controla a aleatorização da estratégia de validação cruzada.
+        O padrão é 42.
+    :type random_seed: int
+    :param n_splits: Número de divisões (ou dobras) para a estratégia de validação cruzada.
+        O padrão é 5.
+    :return: Um dicionário contendo as pontuações médias da validação cruzada para métricas
+        incluindo acurácia (chave: "cv_accuracy"), precisão (chave: "cv_precision"),
+        recall (chave: "cv_recall"), F1-score (chave: "cv_f1"), ROC AUC (chave: "cv_roc_auc")
+        e Precision-Recall AUC (chave: "cv_pr_auc").
+    :rtype: dict[str, float]
+    """
+    cv_strategy = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=random_seed)
+
+    scoring_metrics = {
+        'accuracy': 'accuracy',
+        'precision': 'precision',
+        'recall': 'recall',
+        'f1': 'f1',
+        'roc_auc': 'roc_auc',
+        'pr_auc': 'average_precision'
+=======
     RAW_DATA_DIR,
     TARGET_COLUMN,
     TEST_SIZE,
@@ -58,6 +175,7 @@ def evaluate_model_cv(
         "f1": "f1",
         "roc_auc": "roc_auc",
         "pr_auc": "average_precision",
+>>>>>>> f8290b60dbc7640f2f4cc0fb4d3618e51dad89f7
     }
 
     cv_results = cross_validate(
@@ -66,6 +184,55 @@ def evaluate_model_cv(
         y,
         cv=cv_strategy,
         scoring=scoring_metrics,
+<<<<<<< HEAD
+        return_train_score=False
+    )
+
+    return {
+        "cv_accuracy": cv_results['test_accuracy'].mean(),
+        "cv_precision": cv_results['test_precision'].mean(),
+        "cv_recall": cv_results['test_recall'].mean(),
+        "cv_f1": cv_results['test_f1'].mean(),
+        "cv_roc_auc": cv_results['test_roc_auc'].mean(),
+        "cv_pr_auc": cv_results['test_pr_auc'].mean(),
+    }
+
+
+def save_confusion_matrix(
+    pipeline: Pipeline,
+    x_test: pd.DataFrame,
+    y_test: pd.Series,
+    output_path: Path,
+) -> Path:
+    cache_dir = Path(__file__).resolve().parents[1] / "outputs" / "cache"
+    matplotlib_cache_dir = (
+        Path(__file__).resolve().parents[1] / "outputs" / "matplotlib"
+    )
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    matplotlib_cache_dir.mkdir(parents=True, exist_ok=True)
+    os.environ.setdefault("XDG_CACHE_HOME", str(cache_dir))
+    os.environ.setdefault("MPLCONFIGDIR", str(matplotlib_cache_dir))
+
+    import matplotlib
+    import matplotlib.pyplot as plt
+
+    matplotlib.use("Agg")
+
+    predictions = pipeline.predict(x_test)
+    matrix = confusion_matrix(y_test, predictions)
+    display = ConfusionMatrixDisplay(
+        confusion_matrix=matrix,
+        display_labels=["Stayed", "Churned"],
+    )
+    display.plot(values_format="d", cmap="Blues")
+    plt.title("Confusion Matrix")
+    plt.tight_layout()
+    plt.savefig(output_path)
+    plt.close()
+    return output_path
+
+
+=======
         return_train_score=False,
     )
 
@@ -79,6 +246,7 @@ def evaluate_model_cv(
     }
 
 
+>>>>>>> f8290b60dbc7640f2f4cc0fb4d3618e51dad89f7
 def save_feature_names(pipeline: Pipeline, output_path: Path) -> Path:
     feature_names = pipeline.named_steps["preprocess"].get_feature_names_out().tolist()
     output_path.write_text(
@@ -88,9 +256,28 @@ def save_feature_names(pipeline: Pipeline, output_path: Path) -> Path:
     return output_path
 
 
+<<<<<<< HEAD
+def log_dataset_version(manifest: dict, manifest_path: Path) -> None:
+    source_files = ",".join(item["name"] for item in manifest["files"])
+    mlflow.set_tags(
+        {
+            "dataset.name": manifest["dataset_name"],
+            "dataset.version": manifest["dataset_version"],
+            "dataset.hash": manifest["dataset_version"],
+            "dataset.source_files": source_files,
+        }
+    )
+    mlflow.log_artifact(str(manifest_path), artifact_path="dataset")
+
+
+def run_training(
+    model_name: str,
+    data_dir: Path = DATA_DIR,
+=======
 def run_training(
     model_name: str,
     data_dir: Path = RAW_DATA_DIR,
+>>>>>>> f8290b60dbc7640f2f4cc0fb4d3618e51dad89f7
     test_size: float = TEST_SIZE,
     random_seed: int = RANDOM_SEED,
 ) -> dict[str, float]:
@@ -137,10 +324,17 @@ def run_training(
         mlflow.log_metrics(metrics)
 
         cv_metrics = evaluate_model_cv(
+<<<<<<< HEAD
+            pipeline=build_pipeline(model_name, x, random_seed),  # passa um pipeline "limpo"
+            x=x,
+            y=y,
+            random_seed=random_seed
+=======
             pipeline=build_pipeline(model_name, x_train, random_seed),
             x=x_train,
             y=y_train,
             random_seed=random_seed,
+>>>>>>> f8290b60dbc7640f2f4cc0fb4d3618e51dad89f7
         )
         mlflow.log_metrics(cv_metrics)
 

@@ -81,3 +81,7 @@ Os scripts de treino usam o **tracking URI** definido em `src/config.py` (por pa
 - `models/`: Artefatos de modelos treinados.
 - `tests/`: Testes unitários e de integração.
 - `docs/`: Documentação extra e ML Canvas.
+<<<<<<< HEAD
+```
+=======
+>>>>>>> f8290b60dbc7640f2f4cc0fb4d3618e51dad89f7
