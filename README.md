@@ -8,7 +8,7 @@ Repositório do **Tech Challenge Fase 01** (trilha de Machine Learning): classif
 ## Vídeo de Apresentação (Método STAR)
 
 Confira a apresentação completa do projeto no link abaixo:
-[Assista ao vídeo do Tech Challenge - Fase 1](URL_DO_SEU_VIDEO_AQUI)
+[Assista ao vídeo do Tech Challenge - Fase 1](https://drive.google.com/file/d/1UxlMiqDbnViKHTvyutl5TTxELeIJs0XW/view?usp=sharing)
 
 ---
 
